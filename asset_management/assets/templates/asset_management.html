@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+    <title>Asset Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .buttons {
+            margin-bottom: 20px;
+        }
+        .buttons a {
+            padding: 10px 20px;
+            margin-right: 10px;
+            text-decoration: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+        }
+        .buttons a:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Asset Management</h1>
+
+    <!-- Buttons to display tables -->
+    <div class="buttons">
+        <a href="?show_branches=True">Show Branches</a>
+        <a href="?show_categories=True">Show Categories</a>
+        <a href="?show_assets=True">Show Assets</a>
+    </div>
+
+    <hr>
+
+    <!-- Branches Table -->
+    {% if show_branches %}
+        <h2>Branches</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Branch Name</th>
+                    <th>Branch Code</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for branch in branches %}
+                    <tr>
+                        <td>{{ branch.name }}</td>
+                        <td>{{ branch.code }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- Categories Table -->
+    {% if show_categories %}
+        <h2>Categories</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Category Code</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                    <tr>
+                        <td>{{ category.name }}</td>
+                        <td>{{ category.code }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- Assets Table -->
+    {% if show_assets %}
+        <h2>Assets</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial Number</th>
+                    <th>Branch</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset in assets %}
+                    <tr>
+                        <td>{{ asset.serial_number }}</td>
+                        <td>{{ asset.branch.name }} ({{ asset.branch.code }})</td>
+                        <td>{{ asset.category.name }} ({{ asset.category.code }})</td>
+                        <td>{{ asset.description }}</td> <!-- Assuming you added 'description' to the Asset model -->
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</body>
+</html>

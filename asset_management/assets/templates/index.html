@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Asset Management</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fc;
+            color: #333;
+        }
+
+        /* Header */
+        header {
+            background-color: #0056b3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .action-buttons a button {
+            padding: 10px 20px;
+            font-size: 14px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .action-buttons a button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Statistics Section */
+        .stat-box {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto 30px;
+        }
+
+        .stat-item {
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+            padding: 15px;
+            width: 30%;
+            min-width: 200px;
+        }
+
+        .stat-item h4 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .stat-item p {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Search and Filters */
+        .search-filters {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            align-items: center;
+            margin: 30px auto;
+            flex-wrap: wrap;
+        }
+
+        .search-filters input, .search-filters select {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .search-filters button {
+            padding: 12px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #28a745;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-filters button:hover {
+            background-color: #218838;
+        }
+
+        /* Table Styling */
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table th, table td {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: white;
+            font-size: 14px;
+        }
+
+        table td {
+            font-size: 14px;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 768px) {
+            .stat-box {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* QR Code Image Styling */
+        .qr-code {
+            max-width: 100px; /* Restrict QR code size */
+            max-height: 100px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        Asset Management Dashboard
+    </header>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'add_branch' %}">
+            <button>Add Branch</button>
+        </a>
+        <a href="{% url 'add_category' %}">
+            <button>Add Category</button>
+        </a>
+        <a href="{% url 'generate_asset' %}">
+            <button>Generate Asset</button>
+        </a>
+        <a href="{% url 'generate_report' %}">
+            <button>Generate Report</button>
+        </a>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="stat-box">
+        <div class="stat-item">
+            <h4>Total Branches</h4>
+            <p>{{ total_branches }}</p>
+        </div>
+        <div class="stat-item">
+            <h4>Total Categories</h4>
+            <p>{{ total_categories }}</p>
+        </div>
+        <div class="stat-item">
+            <h4>Total Assets</h4>
+            <p>{{ total_assets }}</p>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="search-filters">
+        <form method="GET" action="">
+            <input type="text" name="search" placeholder="Search by Serial Number or Description" value="{{ search_query }}">
+            
+            <select name="branch_filter">
+                <option value="">All Branches</option>
+                {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if branch.id == branch_filter %}selected{% endif %}>
+                        {{ branch.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <select name="category_filter">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category.id == category_filter %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit">Apply Filters</button>
+        </form>
+    </div>
+
+    <!-- Assets Table -->
+    <h2 style="text-align:center; margin-top: 20px;">Assets</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Asset Serial Number</th>
+                <th>Asset Description</th>
+                <th>Branch Name</th>
+                <th>Category Name</th>
+                <th>QR Code</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if assets %}
+                {% for asset in assets %}
+                    <tr>
+                        <td>{{ asset.asset_serial_number }}</td>
+                        <td>{{ asset.description }}</td>
+                        <td>{{ asset.branch.name }}</td> <!-- Display branch name -->
+                        <td>{{ asset.category.name }}</td> <!-- Display category name -->
+                        <td>
+                            {% if asset.qr_code %}
+                                <img src="{{ asset.qr_code.url }}" alt="QR Code for Asset {{ asset.asset_serial_number }}" class="qr-code">
+                            {% else %}
+                                No QR Code
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5">No assets found</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+</body>
+</html>
