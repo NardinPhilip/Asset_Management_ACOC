@@ -70,7 +70,9 @@ def add_branch(request):
         name = request.POST.get('name')
         code = request.POST.get('code')
         Branch.objects.create(name=name, code=code)
-    return render(request, 'add_branch.html')
+        return redirect('add_branch')
+    branches = Branch.objects.all()  # Fetch all branches
+    return render(request, 'add_branch.html', {'branches': branches})
 
 # View to add a new category
 def add_category(request):
@@ -193,18 +195,217 @@ def generate_report(request):
 from django.shortcuts import render
 from .models import Branch, Category, Asset
 
-def report_view(request):
-    branches = Branch.objects.all()
-    categories = Category.objects.all()
-    assets = Asset.objects.all()
 
-    # You can add filtering logic here if needed based on the request parameters.
+from django.shortcuts import render, redirect
+from .models import AuditSession
 
-    context = {
-        'branches': branches,
-        'categories': categories,
-        'assets': assets,
-    }
-    return render(request, 'your_template.html', context)
+def start_audit(request):
+    # Create a new audit session
+    audit_session = AuditSession.objects.create()
+    request.session['audit_session_id'] = audit_session.id
+    return render(request, 'start_audit.html', {'audit_session': audit_session})
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def scan_qr_code(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        qr_code_identifier = data.get('qr_code')  # This should be the qr_code_identifier
+
+        try:
+            # Look up the asset by the qr_code_identifier
+            asset = Asset.objects.get(qr_code_identifier=qr_code_identifier)
+
+            # Add the asset to the current audit session
+            audit_session_id = request.session.get('audit_session_id')
+            if audit_session_id:
+                audit_session = AuditSession.objects.get(id=audit_session_id)
+                audit_session.scanned_assets.add(asset)
+                audit_session.save()
+
+            response_data = {
+                'status': 'success',
+                'asset': {
+                    'description': asset.description,
+                    'asset_serial_number': asset.asset_serial_number,
+                    'branch_name': asset.branch.name,
+                    'category_name': asset.category.name
+                }
+            }
+            return JsonResponse(response_data)
+        except Asset.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Asset not found.'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
+
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from io import BytesIO
+from .models import Asset
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from io import BytesIO
+from django.http import HttpResponse
+from .models import Asset
 
 
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from io import BytesIO
+from .models import AuditSession, Asset
+from django.utils import timezone  # Add this import
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
+from io import BytesIO
+from django.utils import timezone
+from .models import AuditSession, Asset
+
+
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from io import BytesIO
+from django.utils import timezone
+from .models import AuditSession, Asset
+
+def end_audit(request):
+    audit_session_id = request.session.get('audit_session_id')
+    if not audit_session_id:
+        return HttpResponse("No active audit session.")
+
+    audit_session = AuditSession.objects.get(id=audit_session_id)
+    audit_session.end_time = timezone.now()
+    audit_session.save()
+
+    # Retrieve scanned assets
+    scanned_assets = audit_session.scanned_assets.all()
+    all_assets = Asset.objects.all()
+    not_scanned_assets = all_assets.exclude(id__in=scanned_assets.values_list('id', flat=True))
+
+    # Prepare the PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="audit_report.pdf"'
+
+    buffer = BytesIO()
+    pdf = SimpleDocTemplate(buffer, pagesize=letter)
+
+    # Create a list to hold the PDF content
+    elements = []
+
+    # Add a title
+    styles = getSampleStyleSheet()
+    elements.append(Paragraph("Asset Audit Report", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # Add audit session details
+    elements.append(Paragraph(f"Audit Session ID: {audit_session.id}", styles['BodyText']))
+    elements.append(Paragraph(f"Start Time: {audit_session.start_time.strftime('%Y-%m-%d %H:%M:%S')}", styles['BodyText']))
+    elements.append(Paragraph(f"End Time: {audit_session.end_time.strftime('%Y-%m-%d %H:%M:%S')}", styles['BodyText']))
+    elements.append(Spacer(1, 24))
+
+    # Add a title for scanned assets
+    elements.append(Paragraph("Scanned Assets", styles['Heading2']))
+    elements.append(Spacer(1, 12))
+
+    # Create a table for scanned assets
+    scanned_data = [["Description", "Serial Number", "Branch", "Category"]]
+    for asset in scanned_assets:
+        scanned_data.append([
+            asset.description or 'N/A',
+            asset.asset_serial_number,
+            asset.branch.name,
+            asset.category.name
+        ])
+
+    scanned_table = Table(scanned_data)
+    scanned_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(scanned_table)
+    elements.append(Spacer(1, 24))
+
+    # Add a title for missing assets
+    elements.append(Paragraph("Missing Assets", styles['Heading2']))
+    elements.append(Spacer(1, 12))
+
+    # Create a table for missing assets
+    missing_data = [["Serial Number", "Branch", "Category"]]
+    for asset in not_scanned_assets:
+        missing_data.append([
+            asset.asset_serial_number,
+            asset.branch.name,
+            asset.category.name
+        ])
+
+    missing_table = Table(missing_data)
+    missing_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(missing_table)
+
+    # Build the PDF
+    pdf.build(elements)
+
+    # Finalize PDF
+    buffer.seek(0)
+    response.write(buffer.getvalue())
+    buffer.close()
+
+    # Clear session data
+    del request.session['audit_session_id']
+
+    return response
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Branch
+
+def edit_branch(request, branch_id):
+    branch = get_object_or_404(Branch, id=branch_id)
+    if request.method == 'POST':
+        # Update the branch with new data
+        branch.name = request.POST.get('name')
+        branch.code = request.POST.get('code')
+        branch.save()
+        return redirect('add_branch')
+    return render(request, 'edit_branch.html', {'branch': branch})
+
+def delete_branch(request, branch_id):
+    branch = get_object_or_404(Branch, id=branch_id)
+    branch.delete()
+    return redirect('add_branch')
+def edit_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        # Update only the name and code fields
+        category.name = request.POST.get('name')
+        category.code = request.POST.get('code')
+        category.save()
+        return redirect('add_category')
+    return render(request, 'edit_category.html', {'category': category})
+
+def delete_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    category.delete()
+    return redirect('add_category')

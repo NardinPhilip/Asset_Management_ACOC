@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+    <title>Edit Category</title>
+    <style>
+        /* Go Back button */
+        .go-back {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .go-back:hover {
+            background-color: #0056b3;
+        }
+        /* Form styling */
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <!-- Go Back button -->
+    <a href="{% url 'add_category' %}" class="go-back">Go Back</a>
+
+    <h1>Edit Category</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="name">Category Name:</label>
+        <input type="text" name="name" id="name" value="{{ category.name }}" required>
+        <br>
+        <label for="code">Category Code:</label>
+        <input type="text" name="code" id="code" value="{{ category.code }}" required>
+        <br>
+        <button type="submit">Save Changes</button>
+    </form>
+</body>
+</html>

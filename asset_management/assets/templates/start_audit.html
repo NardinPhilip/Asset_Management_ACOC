@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Audit Session</title>
+    <!-- Include Html5-QRCode library -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #scanner {
+            text-align: center;
+        }
+        #qr-reader {
+            margin: 20px auto;
+            width: 500px;
+        }
+        #scanned-assets {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        #end-audit {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #end-audit:hover {
+            background-color: #0056b3;
+        }
+        #notification {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ffcccb;
+            border: 1px solid #ff4444;
+            border-radius: 5px;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+    <h1>Start Audit Session</h1>
+    <div id="scanner">
+        <p>Scan QR codes to add assets to the audit session.</p>
+        <div id="qr-reader"></div>
+        <div id="notification">This asset has already been scanned!</div>
+        <div id="scanned-assets">
+            <h2>Scanned Assets</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Serial Number</th>
+                        <th>Branch</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody id="scanned-assets-table">
+                    <!-- Scanned assets will be added here dynamically -->
+                </tbody>
+            </table>
+        </div>
+        <button id="end-audit">End Audit</button>
+    </div>
+
+    <script>
+        // Initialize the QR code scanner
+        const html5QrCode = new Html5Qrcode("qr-reader");
+
+        // Track scanned assets to prevent duplicates
+        const scannedAssets = new Set();
+
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log("QR Code scanned:", decodedText);
+
+            // Check if the asset has already been scanned
+            if (scannedAssets.has(decodedText)) {
+                // Show notification
+                document.getElementById('notification').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('notification').style.display = 'none';
+                }, 3000); // Hide notification after 3 seconds
+                return; // Exit the function to prevent adding the asset again
+            }
+
+            // Send the scanned QR code data to the server
+            fetch('/scan_qr_code/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ qr_code: decodedText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const asset = data.asset;
+
+                    // Add the asset to the scanned assets set
+                    scannedAssets.add(decodedText);
+
+                    // Add the asset to the table
+                    const tableRow = `
+                        <tr>
+                            <td>${asset.description}</td>
+                            <td>${asset.asset_serial_number}</td>
+                            <td>${asset.branch_name}</td>
+                            <td>${asset.category_name}</td>
+                        </tr>
+                    `;
+                    document.getElementById('scanned-assets-table').innerHTML += tableRow;
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        // Start the scanner
+        html5QrCode.start(
+            { facingMode: "environment" }, // Use the rear camera
+            { fps: 10, qrbox: 250 },
+            onScanSuccess
+        ).catch(err => {
+            console.error("Failed to start scanner:", err);
+        });
+
+        // End audit button
+        document.getElementById('end-audit').addEventListener('click', () => {
+            html5QrCode.stop().then(() => {
+                console.log("QR Code scanner stopped.");
+                window.location.href = '/end_audit/';
+            }).catch(err => {
+                console.error("Failed to stop scanner:", err);
+            });
+        });
+    </script>
+</body>
+</html>

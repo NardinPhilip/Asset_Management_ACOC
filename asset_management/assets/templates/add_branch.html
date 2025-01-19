@@ -4,19 +4,154 @@
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
     <title>Add Branch</title>
+    <style>
+        /* General body styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+        }
+
+        /* Go Back button */
+        .go-back {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .go-back:hover {
+            background-color: #0056b3;
+        }
+
+        /* Page header styling */
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Form container styling */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto; /* Centers the form */
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 40px;
+            font-size: 14px;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        td {
+            border-top: 1px solid #ddd;
+        }
+
+        tr:hover td {
+            background-color: #f1f1f1;
+        }
+
+        /* Actions styling */
+        .actions a {
+            margin-right: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .actions a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .form-container, table {
+                width: 100%;
+            }
+
+            table th, table td {
+                font-size: 12px;
+            }
+
+            button[type="submit"] {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Go Back button -->
+    <a href="/" class="go-back">Go Back</a>
+
     <h1>Add Branch</h1>
-    <form method="POST">
-        {% csrf_token %}
-        <label for="name">Branch Name:</label>
-        <input type="text" name="name" id="name" required>
-        <br>
-        <label for="code">Branch Code:</label>
-        <input type="text" name="code" id="code" required>
-        <br>
-        <button type="submit">Add Branch</button>
-    </form>
+    <div class="form-container">
+        <form method="POST">
+            {% csrf_token %}
+            <label for="name">Branch Name:</label>
+            <input type="text" name="name" id="name" required>
+            
+            <label for="code">Branch Code:</label>
+            <input type="text" name="code" id="code" required>
+            
+            <button type="submit">Add Branch</button>
+        </form>
+    </div>
 
     <h2>Existing Branches</h2>
     <table>
@@ -32,15 +167,13 @@
                 <tr>
                     <td>{{ branch.name }}</td>
                     <td>{{ branch.code }}</td>
-                    <td>
-                        <a href="{% url 'edit_branch' branch.id %}">Edit</a> |
+                    <td class="actions">
+                        <a href="{% url 'edit_branch' branch.id %}">Edit</a>
                         <a href="{% url 'delete_branch' branch.id %}" onclick="return confirm('Are you sure you want to delete this branch?')">Delete</a>
                     </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
-
-    <a href="/">Go Back</a>
 </body>
 </html>
