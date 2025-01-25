@@ -10,9 +10,35 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            position: relative;
+        }
+        .header {
+            position: relative;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+        #go-home {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            z-index: 1000;
+        }
+        #go-home:hover {
+            background-color: #0056b3;
         }
         #scanner {
             text-align: center;
+            margin-top: 20px;
         }
         #qr-reader {
             margin: 20px auto;
@@ -54,15 +80,60 @@
             background-color: #ffcccb;
             border: 1px solid #ff4444;
             border-radius: 5px;
-            display: none; /* Hidden by default */
+            display: none;
+        }
+        .upload-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .upload-section input[type="file"] {
+            display: none;
+        }
+        .upload-section label {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .upload-section label:hover {
+            background-color: #218838;
+        }
+        #start-scan {
+            padding: 10px 20px;
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        #start-scan:hover {
+            background-color: #e64a19;
+        }
+        hr {
+            margin: 30px 0;
+            border: 0;
+            height: 1px;
+            background: #ddd;
         }
     </style>
 </head>
 <body>
-    <h1>Start Audit Session</h1>
+    <!-- Header Section -->
+    <div class="header">
+        <button id="go-home">Go to Home</button>
+        <h1>Start Audit Session</h1>
+    </div>
+
+    <!-- Scanner Section -->
     <div id="scanner">
         <p>Scan QR codes to add assets to the audit session.</p>
-        <div id="qr-reader"></div>
+        <button id="start-scan">Open Camera and Start Scanning</button>
+        <div id="qr-reader" style="display: none;"></div>
         <div id="notification">This asset has already been scanned!</div>
         <div id="scanned-assets">
             <h2>Scanned Assets</h2>
@@ -83,12 +154,39 @@
         <button id="end-audit">End Audit</button>
     </div>
 
+    <!-- Horizontal Line -->
+    <hr>
+
+    <!-- Upload QR Code in PDF Section -->
+    <div class="upload-section">
+        <h2>Upload QR Code in PDF</h2>
+        <label for="pdf-upload">Choose PDF File</label>
+        <input type="file" id="pdf-upload" accept="application/pdf">
+        <p id="upload-status"></p>
+    </div>
+
     <script>
         // Initialize the QR code scanner
-        const html5QrCode = new Html5Qrcode("qr-reader");
+        let html5QrCode;
 
         // Track scanned assets to prevent duplicates
         const scannedAssets = new Set();
+
+        // Start scanning button
+        document.getElementById('start-scan').addEventListener('click', () => {
+            document.getElementById('qr-reader').style.display = 'block';
+            html5QrCode = new Html5Qrcode("qr-reader");
+
+            // Start the scanner with optimized settings
+            html5QrCode.start(
+                { facingMode: "environment" }, // Use the rear camera
+                { fps: 30, qrbox: 150 }, // Increased fps and reduced qrbox size
+                onScanSuccess
+            ).catch(err => {
+                console.error("Failed to start scanner:", err);
+                alert("Failed to start the scanner. Please ensure camera access is allowed.");
+            });
+        });
 
         function onScanSuccess(decodedText, decodedResult) {
             console.log("QR Code scanned:", decodedText);
@@ -133,26 +231,65 @@
                 } else {
                     alert(data.message);
                 }
+            })
+            .catch(error => {
+                console.error("Error processing QR code:", error);
+                alert("An error occurred while processing the QR code.");
             });
         }
 
-        // Start the scanner
-        html5QrCode.start(
-            { facingMode: "environment" }, // Use the rear camera
-            { fps: 10, qrbox: 250 },
-            onScanSuccess
-        ).catch(err => {
-            console.error("Failed to start scanner:", err);
-        });
-
         // End audit button
         document.getElementById('end-audit').addEventListener('click', () => {
-            html5QrCode.stop().then(() => {
-                console.log("QR Code scanner stopped.");
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    console.log("QR Code scanner stopped.");
+                    window.location.href = '/end_audit/';
+                }).catch(err => {
+                    console.error("Failed to stop scanner:", err);
+                });
+            } else {
                 window.location.href = '/end_audit/';
-            }).catch(err => {
-                console.error("Failed to stop scanner:", err);
-            });
+            }
+        });
+
+        // Go to Home button
+        document.getElementById('go-home').addEventListener('click', () => {
+            window.location.href = '/index'; // Redirect to index.html
+        });
+
+        // Handle PDF upload
+        document.getElementById('pdf-upload').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                const formData = new FormData();
+                formData.append('pdf_file', file);
+
+                fetch('/upload_pdf/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('upload-status').textContent = 'PDF uploaded successfully!';
+                        // Process the QR code from the PDF
+                        if (data.qr_code) {
+                            onScanSuccess(data.qr_code); // Simulate scanning the QR code
+                        }
+                    } else {
+                        document.getElementById('upload-status').textContent = 'Error: ' + data.message;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error uploading PDF:', error);
+                    document.getElementById('upload-status').textContent = 'Error uploading PDF.';
+                });
+            } else {
+                document.getElementById('upload-status').textContent = 'Please upload a valid PDF file.';
+            }
         });
     </script>
 </body>

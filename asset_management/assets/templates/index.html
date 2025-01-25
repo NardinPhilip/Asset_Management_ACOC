@@ -1,26 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Management</title>
     <style>
-        /* General Styling */
-        body {
-            font-family: Arial, sans-serif;
+        /* Reset default styles */
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f4f7fc;
+            box-sizing: border-box;
+        }
+
+        /* Ensure html and body take up the full height of the viewport */
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #F4F6F8; /* Light gray background */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
             color: #333;
+            padding: 20px;
+            position: relative;
         }
 
         /* Header */
         header {
-            background-color: #0056b3;
+            background-color: #2C3E50; /* Dark blue-gray */
             color: white;
             padding: 20px;
             text-align: center;
             font-size: 24px;
             font-weight: bold;
-            letter-spacing: 1px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* Logout Button */
+        .logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #E74C3C; /* Red */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b; /* Darker red on hover */
+            transform: scale(1.02);
         }
 
         /* Action Buttons */
@@ -29,21 +69,23 @@
             justify-content: center;
             gap: 15px;
             margin: 20px 0;
+            flex-wrap: wrap;
         }
 
         .action-buttons a button {
             padding: 10px 20px;
             font-size: 14px;
             color: white;
-            background-color: #007bff;
+            background-color: #3498DB; /* Bright Blue */
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
         }
 
         .action-buttons a button:hover {
-            background-color: #0056b3;
+            background-color: #2980B9; /* Slightly darker blue on hover */
+            transform: scale(1.02);
         }
 
         /* Statistics Section */
@@ -58,8 +100,8 @@
 
         .stat-item {
             background-color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
             text-align: center;
             padding: 15px;
             width: 30%;
@@ -91,32 +133,43 @@
         .search-filters input, .search-filters select {
             padding: 10px;
             font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .search-filters input:focus, .search-filters select:focus {
+            border-color: #3498DB;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+            outline: none;
         }
 
         .search-filters button {
             padding: 12px 20px;
             font-size: 16px;
             color: white;
-            background-color: #28a745;
+            background-color: #3498DB; /* Bright Blue */
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
         }
 
         .search-filters button:hover {
-            background-color: #218838;
+            background-color: #2980B9; /* Slightly darker blue on hover */
+            transform: scale(1.02);
         }
 
         /* Table Styling */
         table {
             width: 90%;
+            max-width: 1200px;
             margin: 20px auto;
             border-collapse: collapse;
             background-color: white;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
         table th, table td {
@@ -126,7 +179,7 @@
         }
 
         table th {
-            background-color: #007bff;
+            background-color: #2C3E50; /* Dark blue-gray */
             color: white;
             font-size: 14px;
         }
@@ -139,23 +192,35 @@
             background-color: #f9f9f9;
         }
 
+        /* QR Code Image Styling */
+        .qr-code {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 0 auto;
+        }
+
         /* Responsive Design */
         @media screen and (max-width: 768px) {
             .stat-box {
                 flex-direction: column;
                 align-items: center;
             }
-        }
 
-        /* QR Code Image Styling */
-        .qr-code {
-            max-width: 100px; /* Restrict QR code size */
-            max-height: 100px;
-            margin: 0 auto;
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            table {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
+
+    <!-- Logout Button -->
+    <a href="{% url 'logout' %}" class="logout-button">Logout</a>
 
     <!-- Header -->
     <header>
@@ -175,6 +240,9 @@
         </a>
         <a href="{% url 'generate_report' %}">
             <button>Generate Report</button>
+        </a>
+        <a href="{% url 'start_audit' %}">
+            <button>Audit Assets</button>
         </a>
     </div>
 
@@ -222,7 +290,7 @@
     </div>
 
     <!-- Assets Table -->
-    <h2 style="text-align:center; margin-top: 20px;">Assets</h2>
+    <h2 style="text-align:center; margin-top: 20px; color: #333;">Assets</h2>
     <table>
         <thead>
             <tr>
@@ -239,8 +307,8 @@
                     <tr>
                         <td>{{ asset.asset_serial_number }}</td>
                         <td>{{ asset.description }}</td>
-                        <td>{{ asset.branch.name }}</td> <!-- Display branch name -->
-                        <td>{{ asset.category.name }}</td> <!-- Display category name -->
+                        <td>{{ asset.branch.name }}</td>
+                        <td>{{ asset.category.name }}</td>
                         <td>
                             {% if asset.qr_code %}
                                 <img src="{{ asset.qr_code.url }}" alt="QR Code for Asset {{ asset.asset_serial_number }}" class="qr-code">

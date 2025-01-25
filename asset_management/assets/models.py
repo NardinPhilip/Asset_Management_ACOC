@@ -1,9 +1,16 @@
+import qrcode
+from io import BytesIO
 from django.db import models
-import random
+from django.core.files import File
+from django.core.exceptions import ValidationError
+import uuid
+import qrcode
+
 
 class Branch(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=10, unique=True)
+    is_deleted = models.BooleanField(default=False)  # Add this field
 
     def __str__(self):
         return self.name
@@ -11,12 +18,10 @@ class Branch(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=10, unique=True)
+    is_deleted = models.BooleanField(default=False)  # Add this field
 
     def __str__(self):
         return self.name
-
-import uuid
-from django.db import models
 
 class Asset(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
@@ -25,13 +30,24 @@ class Asset(models.Model):
     description = models.TextField(blank=True, null=True)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True)
     qr_code_identifier = models.CharField(max_length=100, unique=True, blank=True)  # Unique identifier for the QR code
+    photo = models.ImageField(upload_to='asset_photos/', blank=True, null=True)  # Non-mandatory photo field
+
+    def __str__(self):
+        return f"{self.asset_serial_number} - {self.description}"
 
     def save(self, *args, **kwargs):
+        # Generate a unique asset serial number if it doesn't exist
         if not self.asset_serial_number:
             self.asset_serial_number = self.generate_unique_serial_number()
+
+        # Generate a unique QR code identifier if it doesn't exist
         if not self.qr_code_identifier:
-            self.qr_code_identifier = str(uuid.uuid4())  # Generate a UUID for the QR code
+            self.qr_code_identifier = str(uuid.uuid4())  # Use UUID for uniqueness
+
+        # Generate and save the QR code
         self.generate_qr_code()
+
+        # Save the model
         super().save(*args, **kwargs)
 
     def generate_unique_serial_number(self):
@@ -58,24 +74,24 @@ class Asset(models.Model):
 
     def generate_qr_code(self):
         """Generate and save the QR code."""
-        import qrcode
-        from io import BytesIO
-        from django.core.files import File
+        if not self.qr_code_identifier:
+            raise ValidationError("QR code identifier is required to generate a QR code.")
 
-        qr_data = self.qr_code_identifier  # Use the qr_code_identifier as the QR code data
+        # Use the asset's serial number as the QR code data
+        qr_data = self.asset_serial_number  # Use the asset_serial_number as the QR code data
         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
         qr.add_data(qr_data)
         qr.make(fit=True)
-        
+
         # Generate the image and save it as a file
         img = qr.make_image(fill='black', back_color='white')
         buffer = BytesIO()
-        img.save(buffer)
+        img.save(buffer, format="PNG")
         buffer.seek(0)
-        self.qr_code.save(f"{self.qr_code_identifier}.png", File(buffer), save=False)
-        
-from django.db import models
-from django.utils import timezone
+
+        # Save the QR code image to the model
+        file_name = f"qr_{self.asset_serial_number}.png"
+        self.qr_code.save(file_name, File(buffer), save=False)
 
 class AuditSession(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)

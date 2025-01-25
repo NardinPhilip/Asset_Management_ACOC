@@ -1,159 +1,595 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
     <title>Generate Asset</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- FontAwesome for icons -->
     <style>
-        .sticker-container {
+        /* General body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text */
+            line-height: 1.6;
+        }
+
+        /* Container for the page */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e; /* Dark container background */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Go Back button */
+        .go-back {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue button */
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
+        }
+
+        .go-back:hover {
+            background-color: #005bb5; /* Darker blue on hover */
+        }
+
+        /* Page header styling */
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #007bff; /* Blue header */
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        h2 {
+            margin-top: 40px;
+            color: #e0e0e0; /* Light text */
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        /* Form container styling */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #2d2d2d; /* Dark form background */
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0; /* Light text */
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        textarea,
+        select,
+        input[type="file"] {
+            width: calc(100% - 22px); /* Adjust width to account for padding and border */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #444; /* Dark border */
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #3d3d3d; /* Dark input background */
+            color: #e0e0e0; /* Light text */
+            transition: border-color 0.3s ease;
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus,
+        input[type="file"]:focus {
+            border-color: #007bff; /* Blue border on focus */
+            outline: none;
+        }
+
+        button[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745; /* Green button */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        /* Alert messages */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background-color: #155724; /* Dark green */
+            color: #d4edda; /* Light green text */
+        }
+
+        /* Live photo and upload photo options */
+        .photo-options {
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .photo-options button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 10px;
+            background-color: #444; /* Dark button */
+            color: #e0e0e0; /* Light text */
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        .photo-options button:hover {
+            background-color: #555; /* Darker button on hover */
+        }
+
+        /* Webcam container */
+        #webcam-container {
+            display: none;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        #webcam {
+            width: 100%;
+            border-radius: 6px;
+        }
+
+        #capture-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue button */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+
+        #capture-btn:hover {
+            background-color: #005bb5; /* Darker blue on hover */
+        }
+
+        /* Preview container */
+        #preview-container {
+            display: none;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        #preview {
+            width: 100%;
+            border-radius: 6px;
+        }
+
+        /* Modern Tabs styling */
+        .tabs {
+            display: flex;
+            margin-top: 20px;
+            border-bottom: 2px solid #444; /* Dark border for tabs */
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            background-color: #2d2d2d; /* Dark background */
+            color: #e0e0e0; /* Light text */
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 8px 8px 0 0;
+            margin-right: 5px;
+        }
+
+        .tab-button:last-child {
+            margin-right: 0;
+        }
+
+        .tab-button.active {
+            background-color: #007bff; /* Blue for active tab */
+            color: white;
+            border-bottom: 2px solid #007bff; /* Highlight active tab */
+        }
+
+        .tab-button:hover {
+            background-color: #555; /* Darker on hover */
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: #2d2d2d; /* Dark background */
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #444; /* Border for content */
+            border-top: none;
+        }
+
+        .tab-content.active {
+            display: block; /* Show active tab content */
+        }
+
+        /* Clean Asset Details styling */
+        .asset-details {
+            background-color: #2d2d2d; /* Dark background */
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #444; /* Subtle border */
+        }
+
+        .asset-details h2 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #007bff; /* Blue header */
+        }
+
+        .asset-details p {
+            margin: 10px 0;
+            font-size: 16px;
+            color: #e0e0e0; /* Light text */
+        }
+
+        .asset-details p strong {
+            color: #007bff; /* Blue for strong text */
+        }
+
+        .uploaded-photo {
             margin-top: 20px;
         }
+
+        .uploaded-photo h3 {
+            font-size: 20px;
+            font-weight: 500;
+            color: #e0e0e0; /* Light text */
+            margin-bottom: 10px;
+        }
+
+        .uploaded-photo img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid #444; /* Subtle border */
+        }
+
+        /* Modern Print Button */
+        .print-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff; /* Blue button */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .print-button:hover {
+            background-color: #005bb5; /* Darker blue on hover */
+        }
+
+        /* Sticker styling */
         .sticker {
             display: flex;
             flex-direction: column;
             align-items: center;
-            border: 2px solid #ccc;
+            border: 2px solid #444; /* Dark border */
             padding: 15px;
             border-radius: 8px;
-            width: 200px;  /* Adjusted for better dimensions */
-            text-align: center;
-            background-color: #f9f9f9;
+            background-color: #2d2d2d; /* Dark background */
+            width: 100%; /* Ensure the sticker fits within its container */
+            box-sizing: border-box; /* Include padding and border in the width */
         }
+
         .sticker img {
-            width: 150px; /* Adjusted size */
-            height: 150px;
+            width: 100%; /* Make the QR code responsive within the sticker */
+            height: auto; /* Maintain aspect ratio */
+            max-width: 150px; /* Limit the maximum size of the QR code */
             margin-top: 10px;
         }
+
         .sticker .serial-number {
             font-size: 1.2rem;
             font-weight: bold;
             margin-top: 10px;
+            color: #e0e0e0; /* Light text */
         }
-        .no-print {
-            display: inline-block;
-        }
+
+        /* Print-specific styles */
         @media print {
             body * {
-                visibility: hidden;
+                visibility: hidden; /* Hide everything by default */
             }
-            .sticker-container, .sticker-container * {
-                visibility: visible;
+
+            .sticker,
+            .sticker * {
+                visibility: visible; /* Only show the sticker and its contents */
             }
-            .sticker-container {
+
+            .sticker {
                 position: absolute;
-                top: 0;
-                left: 0;
+                left: 50%; /* Center the sticker horizontally */
+                top: 50%; /* Center the sticker vertically */
+                transform: translate(-50%, -50%); /* Adjust for exact centering */
+                width: auto; /* Allow the sticker to size itself */
+                max-width: 100%; /* Ensure it doesn't exceed the page width */
+                margin: 0; /* Remove any margins */
+                border: 2px solid #000; /* Ensure the border is visible when printed */
+                background-color: #fff; /* White background for printing */
+                color: #000; /* Black text for printing */
+            }
+
+            .sticker img {
+                max-width: 100%; /* Ensure the QR code fits within the sticker */
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .form-container {
                 width: 100%;
-                height: 100%;
             }
-            .no-print {
-                display: none;
+
+            .photo-options {
+                flex-direction: column;
             }
-        }
 
-        /* Style for the Back Home Button */
-        .back-home-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 18px;
-            background-color: #007bff;
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .back-home-btn i {
-            margin-right: 8px;
-        }
+            .photo-options button {
+                margin: 5px 0;
+            }
 
-        /* Spacing for buttons */
-        .button-container {
-            margin-top: 20px;
-            text-align: center;
-        }
+            .tabs {
+                flex-direction: column;
+            }
 
-        .button-container button {
-            margin: 10px;
+            .tab-button {
+                width: 100%;
+                border-radius: 8px;
+                margin-bottom: 5px;
+            }
+
+            .tab-button.active {
+                border-radius: 8px 8px 0 0;
+            }
         }
     </style>
+    <script>
+        let webcamStream = null;
+
+        // Function to handle live photo capture
+        function openWebcam() {
+            const webcamContainer = document.getElementById('webcam-container');
+            const previewContainer = document.getElementById('preview-container');
+
+            // Hide preview container
+            previewContainer.style.display = 'none';
+
+            // Show webcam container
+            webcamContainer.style.display = 'block';
+
+            // Access the webcam
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                    webcamStream = stream; // Store the stream for later use
+                    const video = document.getElementById('webcam');
+                    video.srcObject = stream;
+                    video.play();
+                })
+                .catch((error) => {
+                    console.error('Error accessing webcam:', error);
+                    alert('Error accessing webcam. Please ensure your camera is connected and permissions are granted.');
+                });
+        }
+
+        // Function to capture a photo from the webcam
+        function capturePhoto() {
+            const video = document.getElementById('webcam');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Display the captured photo
+            const previewContainer = document.getElementById('preview-container');
+            const preview = document.getElementById('preview');
+            preview.src = canvas.toDataURL('image/png');
+            previewContainer.style.display = 'block';
+
+            // Stop the webcam stream
+            if (webcamStream) {
+                const tracks = webcamStream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+
+            // Hide the webcam container
+            document.getElementById('webcam-container').style.display = 'none';
+
+            // Set the captured photo as the file input value
+            canvas.toBlob((blob) => {
+                const file = new File([blob], 'captured_photo.png', { type: 'image/png' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById('photo').files = dataTransfer.files;
+            }, 'image/png');
+        }
+
+        // Function to handle file upload
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const previewContainer = document.getElementById('preview-container');
+                const preview = document.getElementById('preview');
+                preview.src = URL.createObjectURL(file);
+                previewContainer.style.display = 'block';
+            }
+        }
+
+        // Function to print the sticker only
+        function printSticker() {
+            window.print();
+        }
+
+        // Function to switch tabs
+        function switchTab(tabName) {
+            // Hide all tab content
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show the selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to the clicked tab button
+            event.target.classList.add('active');
+        }
+    </script>
 </head>
 <body>
-    <!-- Back to Home Button -->
-    <a href="{% url 'index' %}" class="back-home-btn">
-        <i class="fas fa-home"></i>Back to Home
-    </a>
+    <div class="container">
+        <!-- Go Back button -->
+        <a href="{% url 'index' %}" class="go-back">Go Back</a>
 
-    <div class="container mt-5">
-        <h1 class="text-center">Generate Asset</h1>
-        <form method="POST" class="mt-4">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="branch" class="form-label">Select Branch</label>
+        <h1>Generate Asset</h1>
+
+        <!-- Display messages -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Form container -->
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <label for="branch">Select Branch:</label>
                 <select id="branch" name="branch" class="form-select" required>
                     <option value="" disabled selected>-- Select Branch --</option>
                     {% for branch in branches %}
                         <option value="{{ branch.id }}">{{ branch.name }}</option>
                     {% endfor %}
                 </select>
-            </div>
-            <div class="mb-3">
-                <label for="category" class="form-label">Select Category</label>
+
+                <label for="category">Select Category:</label>
                 <select id="category" name="category" class="form-select" required>
                     <option value="" disabled selected>-- Select Category --</option>
                     {% for category in categories %}
                         <option value="{{ category.id }}">{{ category.name }}</option>
                     {% endfor %}
                 </select>
-            </div>
-            <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea id="description" name="description" class="form-control" rows="3" placeholder="Enter asset description"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Generate Asset</button>
-        </form>
 
-        {% if serial_number %}
-            <div class="alert alert-success mt-4">
-                <strong>Success!</strong> Asset has been generated with Serial Number: <strong>{{ serial_number }}</strong>
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="3" placeholder="Enter asset description"></textarea>
+
+                <!-- Photo options -->
+                <div class="photo-options">
+                    <button type="button" onclick="openWebcam()">Take Live Photo</button>
+                    <button type="button" onclick="document.getElementById('photo').click()">Upload Photo</button>
+                </div>
+
+                <!-- Webcam container -->
+                <div id="webcam-container">
+                    <video id="webcam" autoplay></video>
+                    <button type="button" id="capture-btn" onclick="capturePhoto()">Capture Photo</button>
+                </div>
+
+                <!-- File input for photo upload -->
+                <input type="file" id="photo" name="photo" accept="image/*" style="display: none;" onchange="handleFileUpload(event)">
+
+                <!-- Preview container -->
+                <div id="preview-container">
+                    <img id="preview" alt="Preview">
+                </div>
+
+                <button type="submit">Generate Asset</button>
+            </form>
+        </div>
+
+        <!-- Display asset details and QR code after creation -->
+        {% if asset %}
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('asset-details-tab')">Asset Details</button>
+                <button class="tab-button" onclick="switchTab('qr-code-tab')">QR Code</button>
             </div>
-        {% endif %}
 
-        {% if asset and asset.qr_code %}
-            <div class="mt-4 text-center">
-                <h2>Generated QR Code</h2>
-                <p class="mt-2">Asset Serial Number: <strong>{{ asset.asset_serial_number }}</strong></p>
+            <!-- Asset Details Tab -->
+            <div id="asset-details-tab" class="tab-content active">
+                <div class="asset-details">
+                    <h2>Asset Details</h2>
+                    <p><strong>Serial Number:</strong> {{ asset.asset_serial_number }}</p>
+                    <p><strong>Branch:</strong> {{ asset.branch.name }}</p>
+                    <p><strong>Category:</strong> {{ asset.category.name }}</p>
+                    <p><strong>Description:</strong> {{ asset.description }}</p>
 
-                <!-- Sticker Section with Serial Number and QR Code -->
-                <div class="sticker-container">
-                    <div class="sticker">
-                        <div class="serial-number">
-                            Serial Number: <strong>{{ asset.asset_serial_number }}</strong>
+                    <!-- Display the uploaded photo if available -->
+                    {% if asset.photo %}
+                        <div class="uploaded-photo">
+                            <h3>Uploaded Photo</h3>
+                            <img src="{{ asset.photo.url }}" alt="Asset Photo">
                         </div>
-                        <img src="{{ asset.qr_code.url }}" alt="QR Code for Asset {{ asset.asset_serial_number }}">
-                    </div>
+                    {% endif %}
                 </div>
+            </div>
 
-                <!-- Button Container -->
-                <div class="button-container">
-                    <!-- Print Button -->
-                    <button class="btn btn-success no-print" onclick="printSticker();">Print Sticker</button>
+            <!-- QR Code Tab -->
+            <div id="qr-code-tab" class="tab-content">
+                <div class="sticker">
+                    <div class="serial-number">
+                        Serial Number: <strong>{{ asset.asset_serial_number }}</strong>
+                    </div>
+                    <img src="{{ asset.qr_code.url }}" alt="QR Code for Asset {{ asset.asset_serial_number }}">
                 </div>
+                <button class="print-button" onclick="printSticker();">Print Sticker</button>
             </div>
         {% endif %}
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function printSticker() {
-            window.print();
-        }
-    </script>
 </body>
 </html>

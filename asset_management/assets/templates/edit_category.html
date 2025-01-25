@@ -2,65 +2,232 @@
 <html lang="en">
 <head>
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
-    <title>Edit Category</title>
+    <title>{% if category %}Edit Category{% else %}Add Category{% endif %}</title>
     <style>
+        /* General body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text */
+            line-height: 1.6;
+        }
+
+        /* Container for the page */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e; /* Dark container background */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
         /* Go Back button */
         .go-back {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 5px 10px;
-            background-color: #007bff;
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue button */
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
         }
+
         .go-back:hover {
-            background-color: #0056b3;
+            background-color: #005bb5; /* Darker blue on hover */
         }
-        /* Form styling */
-        form {
-            margin-top: 20px;
+
+        /* Page header styling */
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #007bff; /* Blue header */
+            font-size: 28px;
+            font-weight: 600;
         }
+
+        h2 {
+            margin-top: 40px;
+            color: #e0e0e0; /* Light text */
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        /* Form container styling */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #2d2d2d; /* Dark form background */
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0; /* Light text */
+            font-size: 14px;
         }
+
         input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            width: calc(100% - 22px); /* Adjust width to account for padding and border */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #444; /* Dark border */
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #3d3d3d; /* Dark input background */
+            color: #e0e0e0; /* Light text */
+            transition: border-color 0.3s ease;
+            box-sizing: border-box; /* Ensure padding is included in width */
         }
+
+        input[type="text"]:focus {
+            border-color: #007bff; /* Blue border on focus */
+            outline: none;
+        }
+
         button[type="submit"] {
-            padding: 10px 20px;
-            background-color: #28a745;
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745; /* Green button */
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
         }
+
         button[type="submit"]:hover {
-            background-color: #218838;
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        /* Messages */
+        .messages {
+            margin-bottom: 20px;
+        }
+        .messages div {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .messages .success {
+            background-color: #238636; /* Green for success */
+            color: white;
+        }
+        .messages .error {
+            background-color: #f85149; /* Red for error */
+            color: white;
         }
     </style>
+    <script>
+        // Function to get the CSRF token from the DOM
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Function to handle form submission
+        document.querySelector('form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData(this);
+            const csrfToken = getCookie('csrftoken');
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to update category.');
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    // Display success message
+                    const messagesDiv = document.querySelector('.messages');
+                    messagesDiv.innerHTML = `
+                        <div class="success">Category updated successfully! Redirecting...</div>
+                    `;
+
+                    // Redirect to the add_category page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = "{% url 'add_category' %}";
+                    }, 2000);
+                } else {
+                    // Display error message
+                    const messagesDiv = document.querySelector('.messages');
+                    messagesDiv.innerHTML = `
+                        <div class="error">${data.error || 'Failed to update category.'}</div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const messagesDiv = document.querySelector('.messages');
+                messagesDiv.innerHTML = `
+                    <div class="error">An error occurred while updating the category.</div>
+                `;
+            });
+        });
+    </script>
 </head>
 <body>
-    <!-- Go Back button -->
-    <a href="{% url 'add_category' %}" class="go-back">Go Back</a>
+    <div class="container">
+        <!-- Go Back button -->
+        <a href="/index" class="go-back">Go Back</a>
 
-    <h1>Edit Category</h1>
-    <form method="POST">
-        {% csrf_token %}
-        <label for="name">Category Name:</label>
-        <input type="text" name="name" id="name" value="{{ category.name }}" required>
-        <br>
-        <label for="code">Category Code:</label>
-        <input type="text" name="code" id="code" value="{{ category.code }}" required>
-        <br>
-        <button type="submit">Save Changes</button>
-    </form>
+        <h1>{% if category %}Edit Category{% else %}Add Category{% endif %}</h1>
+
+        <!-- Display messages -->
+        <div class="messages">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- Form container -->
+        <div class="form-container">
+            <form method="POST" action="{% if category %}{% url 'edit_category' category.id %}{% else %}{% url 'add_category' %}{% endif %}">
+                {% csrf_token %}
+                <label for="name">Category Name:</label>
+                <input type="text" name="name" id="name" value="{% if category %}{{ category.name }}{% endif %}" required>
+                
+                <label for="code">Category Code:</label>
+                <input type="text" name="code" id="code" value="{% if category %}{{ category.code }}{% endif %}" required>
+                
+                <button type="submit">{% if category %}Save Category{% else %}Add Category{% endif %}</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

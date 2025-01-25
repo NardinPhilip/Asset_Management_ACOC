@@ -2,77 +2,114 @@
 <html lang="en">
 <head>
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
-    <title>Add Category</title>
+    <title>{% if category %}Edit Category{% else %}Add Category{% endif %}</title>
     <style>
         /* General body styling */
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text */
             line-height: 1.6;
+        }
+
+        /* Container for the page */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e; /* Dark container background */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         /* Go Back button */
         .go-back {
             display: inline-block;
             margin-bottom: 20px;
-            padding: 10px 15px;
-            background-color: #007bff;
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue button */
             color: white;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            font-size: 14px;
         }
 
         .go-back:hover {
-            background-color: #0056b3;
+            background-color: #005bb5; /* Darker blue on hover */
         }
 
         /* Page header styling */
         h1 {
             text-align: center;
             margin-bottom: 20px;
+            color: #007bff; /* Blue header */
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        h2 {
+            margin-top: 40px;
+            color: #e0e0e0; /* Light text */
+            font-size: 24px;
+            font-weight: 500;
         }
 
         /* Form container styling */
         .form-container {
             max-width: 500px;
             margin: 0 auto;
-            background-color: white;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #2d2d2d; /* Dark form background */
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box; /* Ensure padding is included in width */
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0; /* Light text */
+            font-size: 14px;
         }
 
         input[type="text"] {
-            width: 100%;
+            width: calc(100% - 22px); /* Adjust width to account for padding and border */
             padding: 10px;
             margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            border: 1px solid #444; /* Dark border */
+            border-radius: 6px;
             font-size: 14px;
+            background-color: #3d3d3d; /* Dark input background */
+            color: #e0e0e0; /* Light text */
+            transition: border-color 0.3s ease;
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+
+        input[type="text"]:focus {
+            border-color: #007bff; /* Blue border on focus */
+            outline: none;
         }
 
         button[type="submit"] {
             display: block;
             width: 100%;
-            padding: 10px;
-            background-color: #28a745;
+            padding: 12px;
+            background-color: #28a745; /* Green button */
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
         }
 
         button[type="submit"]:hover {
-            background-color: #218838;
+            background-color: #218838; /* Darker green on hover */
         }
 
         /* Table styling */
@@ -80,11 +117,11 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            margin-top: 40px;
-            background-color: white;
-            border-radius: 10px;
+            margin-top: 20px;
+            background-color: #2d2d2d; /* Dark table background */
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         th, td {
@@ -93,34 +130,41 @@
         }
 
         th {
-            background-color: #007bff;
+            background-color: #007bff; /* Blue header */
             color: white;
             text-transform: uppercase;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #3d3d3d; /* Darker row */
         }
 
         tr:nth-child(odd) {
-            background-color: white;
+            background-color: #2d2d2d; /* Dark row */
         }
 
         td {
-            border-top: 1px solid #ddd;
+            border-top: 1px solid #444; /* Dark border */
+            color: #e0e0e0; /* Light text */
+            font-size: 14px;
         }
 
         tr:hover td {
-            background-color: #f1f1f1;
+            background-color: #444; /* Hover effect */
         }
 
         .actions a {
             margin-right: 10px;
-            color: #007bff;
+            color: #007bff; /* Blue links */
             text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 14px;
         }
 
         .actions a:hover {
+            color: #005bb5; /* Darker blue on hover */
             text-decoration: underline;
         }
 
@@ -139,53 +183,177 @@
             }
         }
     </style>
+    <script>
+        // Function to get the CSRF token from the DOM
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Function to handle category deletion
+        function deleteCategory(categoryId, element) {
+            if (confirm('Are you sure you want to delete this category?')) {
+                const csrfToken = getCookie('csrftoken');
+                fetch(`/delete-category/${categoryId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Move the deleted row to the "Deleted Categories" table
+                        const row = element.closest('tr');
+                        const deletedTableBody = document.querySelector('.deleted-categories tbody');
+                        row.querySelector('.actions').innerHTML = `
+                            <a href="#" onclick="restoreCategory('${categoryId}', this); return false;">Restore</a>
+                        `;
+                        deletedTableBody.appendChild(row);
+                        alert('Category deleted successfully!');
+                    } else {
+                        alert('Failed to delete category.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the category.');
+                });
+            }
+        }
+
+        // Function to handle category restoration
+        function restoreCategory(categoryId, element) {
+            if (confirm('Are you sure you want to restore this category?')) {
+                const csrfToken = getCookie('csrftoken');
+                fetch(`/restore-category/${categoryId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Move the restored row back to the "Existing Categories" table
+                        const row = element.closest('tr');
+                        const activeTableBody = document.querySelector('table tbody');
+                        row.querySelector('.actions').innerHTML = `
+                            <a href="/edit-category/${categoryId}/">Edit</a>
+                            <a href="#" onclick="deleteCategory('${categoryId}', this); return false;">Delete</a>
+                        `;
+                        activeTableBody.appendChild(row);
+                        alert('Category restored successfully!');
+                    } else {
+                        alert(data.error || 'Failed to restore category.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while restoring the category.');
+                });
+            }
+        }
+    </script>
 </head>
 <body>
-    <!-- Go Back button -->
-    <a href="/" class="go-back">Go Back</a>
+    <div class="container">
+        <!-- Go Back button -->
+        <a href="/index" class="go-back">Go Back</a>
 
-    <h1>Add Category</h1>
-    <div class="form-container">
-        <form method="POST">
-            {% csrf_token %}
-            <label for="name">Category Name:</label>
-            <input type="text" name="name" id="name" required>
-            
-            <label for="code">Category Code:</label>
-            <input type="text" name="code" id="code" required>
-            
-            <button type="submit">Add Category</button>
-        </form>
-    </div>
+        <h1>{% if category %}Edit Category{% else %}Add Category{% endif %}</h1>
 
-    <h2>Existing Categories</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Serial Number</th>
-                <th>Category Name</th>
-                <th>Category Code</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for category in categories %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ category.name }}</td>
-                    <td>{{ category.code }}</td>
-                    <td class="actions">
-                        <a href="{% url 'edit_category' category.id %}">Edit</a>
-                        <a href="{% url 'delete_category' category.id %}" onclick="return confirm('Are you sure you want to delete this category?')">Delete</a>
-                        <a href="{% url 'review_category' category.id %}">Review</a>
-                    </td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="4" style="text-align: center;">No categories available.</td>
-                </tr>
+        <!-- Display messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="{{ message.tags }}">{{ message }}</div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form method="POST" action="{% if category %}{% url 'edit_category' category.id %}{% else %}{% url 'add_category' %}{% endif %}">
+                {% csrf_token %}
+                <label for="name">Category Name:</label>
+                <input type="text" name="name" id="name" value="{% if category %}{{ category.name }}{% endif %}" required>
+                
+                <label for="code">Category Code:</label>
+                <input type="text" name="code" id="code" value="{% if category %}{{ category.code }}{% endif %}" required>
+                
+                <button type="submit">{% if category %}Save Category{% else %}Add Category{% endif %}</button>
+            </form>
+        </div>
+
+        <h2>Existing Categories</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Category Code</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                    <tr id="category-{{ cat.id }}">
+                        <td>{{ cat.name }}</td>
+                        <td>{{ cat.code }}</td>
+                        <td class="actions">
+                            <a href="{% url 'edit_category' cat.id %}">Edit</a>
+                            <a href="#" onclick="deleteCategory('{{ cat.id }}', this); return false;">Delete</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" style="text-align: center;">No categories available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Display soft-deleted categories -->
+        <div class="deleted-categories">
+            <h3>Deleted Categories</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category Name</th>
+                        <th>Category Code</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in deleted_categories %}
+                        <tr id="category-{{ cat.id }}">
+                            <td>{{ cat.name }}</td>
+                            <td>{{ cat.code }}</td>
+                            <td class="actions">
+                                <a href="#" onclick="restoreCategory('{{ cat.id }}', this); return false;">Restore</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" style="text-align: center;">No deleted categories available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </body>
 </html>

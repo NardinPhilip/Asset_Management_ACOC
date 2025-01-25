@@ -104,7 +104,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            border-radius: 12px; /* Rounded corners */
+            border-radius: 12px;
         }
 
         .sticker img {
@@ -118,10 +118,35 @@
             font-size: 12px;
             font-weight: bold;
         }
+
+        .go-back-home {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .go-back-home:hover {
+            background-color: #0056b3;
+        }
+
+        .asset-photo {
+            width: 100px;
+            height: 100px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Go Back Home Button -->
+        <a href="{% url 'index' %}" class="go-back-home">Go Back Home</a>
+
         <h1>Asset Report</h1>
 
         <!-- Search and Filter Section -->
@@ -151,12 +176,13 @@
         <table id="asset-table">
             <thead>
                 <tr>
-                    <th>Select</th>
+                    <th><input type="checkbox" id="select-all"></th>
                     <th>Serial Number</th>
                     <th>Description</th>
                     <th>Branch</th>
                     <th>Category</th>
                     <th>QR Code</th>
+                    <th>Photo</th>
                 </tr>
             </thead>
             <tbody>
@@ -165,11 +191,20 @@
                         <td class="select-row">
                             <input type="checkbox" class="asset-checkbox" data-asset-id="{{ asset.id }}">
                         </td>
-                        <td>{{ asset.asset_serial_number }}</td> <!-- Display Serial Number -->
+                        <td>{{ asset.asset_serial_number }}</td>
                         <td>{{ asset.description }}</td>
                         <td>{{ asset.branch.name }}</td>
                         <td>{{ asset.category.name }}</td>
-                        <td><img src="{{ asset.qr_code.url }}" class="qr-code" alt="QR Code for {{ asset.asset_serial_number }}"></td>
+                        <td>
+                            <img src="{{ asset.qr_code.url }}" class="qr-code" alt="QR Code for {{ asset.asset_serial_number }}">
+                        </td>
+                        <td>
+                            {% if asset.photo %}
+                                <img src="{{ asset.photo.url }}" class="asset-photo" alt="Photo for {{ asset.asset_serial_number }}" data-asset-photo="{{ asset.photo.url }}">
+                            {% else %}
+                                No Photo Available
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -178,6 +213,8 @@
         <!-- Print Report Buttons -->
         <button class="button" onclick="printReport()">Print Report</button>
         <button class="button" onclick="printQRCode()">Print Only QR Code Stickers</button>
+        <button class="button" onclick="printSerialAndPhoto()">Print Serial Number and Photo</button>
+        <button class="button" onclick="printSerialQRPhoto()">Print Serial Number, QR Code, and Photo</button>
     </div>
 
     <script>
@@ -214,19 +251,21 @@
                         <th>Branch</th>
                         <th>Category</th>
                         <th>QR Code</th>
+                        <th>Photo</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             `;
 
             selectedRows.forEach((checkbox) => {
-                const assetId = checkbox.getAttribute("data-asset-id");
                 const row = checkbox.closest("tr");
                 const serialNumber = row.querySelector("td:nth-child(2)").textContent;
                 const description = row.querySelector("td:nth-child(3)").textContent;
                 const branch = row.querySelector("td:nth-child(4)").textContent;
                 const category = row.querySelector("td:nth-child(5)").textContent;
                 const qrCodeUrl = row.querySelector("td:nth-child(6) img").src;
+                const photoImg = row.querySelector("td:nth-child(7) img");
+                const photoUrl = photoImg ? photoImg.src : null;
 
                 const newRow = document.createElement("tr");
                 newRow.innerHTML = `
@@ -235,6 +274,7 @@
                     <td>${branch}</td>
                     <td>${category}</td>
                     <td><img src="${qrCodeUrl}" class="qr-code" alt="QR Code for ${serialNumber}"></td>
+                    <td>${photoUrl ? `<img src="${photoUrl}" class="asset-photo" alt="Photo for ${serialNumber}">` : 'No Photo Available'}</td>
                 `;
 
                 selectedTable.querySelector("tbody").appendChild(newRow);
@@ -273,6 +313,11 @@
                         .qr-code {
                             width: 50px;
                             height: 50px;
+                        }
+
+                        .asset-photo {
+                            width: 100px;
+                            height: 100px;
                         }
                     </style>
                 </head>
@@ -364,6 +409,169 @@
             printWindow.document.close();
             printWindow.print();
         }
+
+        function printSerialAndPhoto() {
+            const selectedRows = document.querySelectorAll(".asset-checkbox:checked");
+            const selectedTable = document.createElement("table");
+            selectedTable.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Serial Number</th>
+                        <th>Photo</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+
+            selectedRows.forEach((checkbox) => {
+                const row = checkbox.closest("tr");
+                const serialNumber = row.querySelector("td:nth-child(2)").textContent;
+                const photoImg = row.querySelector("td:nth-child(7) img");
+                const photoUrl = photoImg ? photoImg.src : null;
+
+                const newRow = document.createElement("tr");
+                newRow.innerHTML = `
+                    <td>${serialNumber}</td>
+                    <td>${photoUrl ? `<img src="${photoUrl}" class="asset-photo" alt="Photo for ${serialNumber}">` : 'No Photo Available'}</td>
+                `;
+
+                selectedTable.querySelector("tbody").appendChild(newRow);
+            });
+
+            const printWindow = window.open("", "", "width=800,height=600");
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print Serial Number and Photo</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 20px;
+                            padding: 20px;
+                            background-color: #fff;
+                        }
+
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                            border: 1px solid #000;
+                        }
+
+                        th, td {
+                            text-align: left;
+                            padding: 12px;
+                            border: 1px solid #000;
+                        }
+
+                        th {
+                            background-color: #f4f7fc;
+                        }
+
+                        .asset-photo {
+                            width: 100px;
+                            height: 100px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Serial Number and Photo Report</h1>
+                    ${selectedTable.outerHTML}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function printSerialQRPhoto() {
+            const selectedRows = document.querySelectorAll(".asset-checkbox:checked");
+            const selectedTable = document.createElement("table");
+            selectedTable.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Serial Number</th>
+                        <th>QR Code</th>
+                        <th>Photo</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+
+            selectedRows.forEach((checkbox) => {
+                const row = checkbox.closest("tr");
+                const serialNumber = row.querySelector("td:nth-child(2)").textContent;
+                const qrCodeUrl = row.querySelector("td:nth-child(6) img").src;
+                const photoImg = row.querySelector("td:nth-child(7) img");
+                const photoUrl = photoImg ? photoImg.src : null;
+
+                const newRow = document.createElement("tr");
+                newRow.innerHTML = `
+                    <td>${serialNumber}</td>
+                    <td><img src="${qrCodeUrl}" class="qr-code" alt="QR Code for ${serialNumber}"></td>
+                    <td>${photoUrl ? `<img src="${photoUrl}" class="asset-photo" alt="Photo for ${serialNumber}">` : 'No Photo Available'}</td>
+                `;
+
+                selectedTable.querySelector("tbody").appendChild(newRow);
+            });
+
+            const printWindow = window.open("", "", "width=800,height=600");
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print Serial Number, QR Code, and Photo</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 20px;
+                            padding: 20px;
+                            background-color: #fff;
+                        }
+
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                            border: 1px solid #000;
+                        }
+
+                        th, td {
+                            text-align: left;
+                            padding: 12px;
+                            border: 1px solid #000;
+                        }
+
+                        th {
+                            background-color: #f4f7fc;
+                        }
+
+                        .qr-code {
+                            width: 50px;
+                            height: 50px;
+                        }
+
+                        .asset-photo {
+                            width: 100px;
+                            height: 100px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Serial Number, QR Code, and Photo Report</h1>
+                    ${selectedTable.outerHTML}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        document.getElementById('select-all').addEventListener('click', function(event) {
+            const checkboxes = document.querySelectorAll('.asset-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = event.target.checked;
+            });
+        });
     </script>
 </body>
 </html>

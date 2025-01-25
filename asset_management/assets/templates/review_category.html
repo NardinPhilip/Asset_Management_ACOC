@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Category</title>
+</head>
+<body>
+    <h1>Review Category</h1>
+    <p><strong>Name:</strong> {{ category.name }}</p>
+    <p><strong>Code:</strong> {{ category.code }}</p>
+    <a href="{% url 'add_category' %}">Back to Categories</a>
+</body>
+</html>
