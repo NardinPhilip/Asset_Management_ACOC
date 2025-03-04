@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     {% load static %}
-    <title>{% if branch %}Edit Branch{% else %}Add Branch{% endif %}</title>
+    <title>{% if department %}Edit Department{% else %}Add Department{% endif %}</title>
     <style>
         /* General body styling */
         body {
@@ -14,7 +14,6 @@
             line-height: 1.6;
         }
 
-
         /* Container for the page */
         .container {
             max-width: 1200px;
@@ -24,7 +23,6 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
-
 
         /* Go Back button */
         .go-back {
@@ -39,11 +37,9 @@
             font-size: 14px;
         }
 
-
         .go-back:hover {
             background-color: #005bb5; /* Darker blue on hover */
         }
-
 
         /* Page header styling */
         h1 {
@@ -54,14 +50,12 @@
             font-weight: 600;
         }
 
-
         h2 {
             margin-top: 40px;
             color: #e0e0e0; /* Light text */
             font-size: 24px;
             font-weight: 500;
         }
-
 
         /* Form container styling */
         .form-container {
@@ -74,7 +68,6 @@
             box-sizing: border-box; /* Ensure padding is included in width */
         }
 
-
         label {
             display: block;
             margin-bottom: 8px;
@@ -82,7 +75,6 @@
             color: #e0e0e0; /* Light text */
             font-size: 14px;
         }
-
 
         input[type="text"] {
             width: calc(100% - 22px); /* Adjust width to account for padding and border */
@@ -97,12 +89,10 @@
             box-sizing: border-box; /* Ensure padding is included in width */
         }
 
-
         input[type="text"]:focus {
             border-color: #007bff; /* Blue border on focus */
             outline: none;
         }
-
 
         button[type="submit"] {
             display: block;
@@ -118,11 +108,9 @@
             transition: background-color 0.3s ease;
         }
 
-
         button[type="submit"]:hover {
             background-color: #218838; /* Darker green on hover */
         }
-
 
         /* Table styling */
         table {
@@ -136,12 +124,10 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-
         th, td {
             padding: 12px;
             text-align: left;
         }
-
 
         th {
             background-color: #007bff; /* Blue header */
@@ -151,16 +137,13 @@
             font-weight: 500;
         }
 
-
         tr:nth-child(even) {
             background-color: #3d3d3d; /* Darker row */
         }
 
-
         tr:nth-child(odd) {
             background-color: #2d2d2d; /* Dark row */
         }
-
 
         td {
             border-top: 1px solid #444; /* Dark border */
@@ -168,11 +151,9 @@
             font-size: 14px;
         }
 
-
         tr:hover td {
             background-color: #444; /* Hover effect */
         }
-
 
         .actions a {
             margin-right: 10px;
@@ -182,12 +163,10 @@
             font-size: 14px;
         }
 
-
         .actions a:hover {
             color: #005bb5; /* Darker blue on hover */
             text-decoration: underline;
         }
-
 
         /* Responsive design */
         @media (max-width: 600px) {
@@ -195,11 +174,9 @@
                 width: 100%;
             }
 
-
             table th, table td {
                 font-size: 12px;
             }
-
 
             button[type="submit"] {
                 font-size: 14px;
@@ -223,12 +200,11 @@
             return cookieValue;
         }
 
-
-        // Function to handle branch deletion
-        function deleteBranch(branchId, element) {
-            if (confirm('Are you sure you want to delete this branch?')) {
+        // Function to handle department deletion
+        function deleteDepartment(departmentId, element) {
+            if (confirm('Are you sure you want to delete this department?')) {
                 const csrfToken = getCookie('csrftoken');
-                fetch(`/delete-branch/${branchId}/`, {
+                fetch(`/delete-department/${departmentId}/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrfToken,
@@ -239,31 +215,37 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Move the deleted row to the "Deleted Branches" table
+                        // Move the deleted row to the "Deleted Departments" table
                         const row = element.closest('tr');
-                        const deletedTableBody = document.querySelector('.deleted-branches tbody');
+                        const deletedTableBody = document.querySelector('.deleted-departments tbody');
                         row.querySelector('.actions').innerHTML = `
-                            <a href="#" onclick="restoreBranch('${branchId}', this); return false;">Restore</a>
+                            <a href="#" onclick="restoreDepartment('${departmentId}', this); return false;">Restore</a>
                         `;
                         deletedTableBody.appendChild(row);
-                        alert('Branch deleted successfully!');
+
+                        // Remove the "No deleted departments available" message if it exists
+                        const noDeletedMessage = deletedTableBody.querySelector('tr td[colspan="3"]');
+                        if (noDeletedMessage) {
+                            noDeletedMessage.remove();
+                        }
+
+                        alert('Department deleted successfully!');
                     } else {
-                        alert('Failed to delete branch.');
+                        alert('Failed to delete department.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while deleting the branch.');
+                    alert('An error occurred while deleting the department.');
                 });
             }
         }
 
-
-        // Function to handle branch restoration
-        function restoreBranch(branchId, element) {
-            if (confirm('Are you sure you want to restore this branch?')) {
+        // Function to handle department restoration
+        function restoreDepartment(departmentId, element) {
+            if (confirm('Are you sure you want to restore this department?')) {
                 const csrfToken = getCookie('csrftoken');
-                fetch(`/restore-branch/${branchId}/`, {
+                fetch(`/restore-department/${departmentId}/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrfToken,
@@ -274,22 +256,33 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Move the restored row back to the "Existing Branches" table
+                        // Move the restored row back to the "Existing Departments" table
                         const row = element.closest('tr');
                         const activeTableBody = document.querySelector('table tbody');
                         row.querySelector('.actions').innerHTML = `
-                            <a href="/edit-branch/${branchId}/">Edit</a>
-                            <a href="#" onclick="deleteBranch('${branchId}', this); return false;">Delete</a>
+                            <a href="/edit-department/${departmentId}/">Edit</a>
+                            <a href="#" onclick="deleteDepartment('${departmentId}', this); return false;">Delete</a>
                         `;
                         activeTableBody.appendChild(row);
-                        alert('Branch restored successfully!');
+
+                        // Add the "No deleted departments available" message if the deleted table is empty
+                        const deletedTableBody = document.querySelector('.deleted-departments tbody');
+                        if (deletedTableBody.children.length === 0) {
+                            deletedTableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="3" style="text-align: center;">No deleted departments available.</td>
+                                </tr>
+                            `;
+                        }
+
+                        alert('Department restored successfully!');
                     } else {
-                        alert(data.error || 'Failed to restore branch.');
+                        alert(data.error || 'Failed to restore department.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while restoring the branch.');
+                    alert('An error occurred while restoring the department.');
                 });
             }
         }
@@ -300,9 +293,7 @@
         <!-- Go Back button -->
         <a href="/index" class="go-back">Go Back</a>
 
-
-        <h1>{% if branch %}Edit Branch{% else %}Add Branch{% endif %}</h1>
-
+        <h1>{% if department %}Edit Department{% else %}Add Department{% endif %}</h1>
 
         <!-- Display messages -->
         {% if messages %}
@@ -313,72 +304,76 @@
         </div>
         {% endif %}
 
-
         <div class="form-container">
-            <form method="POST" action="{% if branch %}{% url 'edit_branch' branch.id %}{% else %}{% url 'add_branch' %}{% endif %}">
+            <form method="POST" action="{% if department %}{% url 'edit_department' department.id %}{% else %}{% url 'add_department' %}{% endif %}">
                 {% csrf_token %}
-                <label for="name">Branch Name:</label>
-                <input type="text" name="name" id="name" value="{% if branch %}{{ branch.name }}{% endif %}" required>
-               
-                <label for="code">Branch Code:</label>
-                <input type="text" name="code" id="code" value="{% if branch %}{{ branch.code }}{% endif %}" required>
-               
-                <button type="submit">{% if branch %}Save Branch{% else %}Add Branch{% endif %}</button>
+                <label for="name">Department Name:</label>
+                <input type="text" name="name" id="name" value="{% if department %}{{ department.name }}{% endif %}" required>
+                
+                <label for="manager">Manager:</label>
+                <input type="text" name="manager" id="manager" value="{% if department %}{{ department.manager }}{% endif %}" required>
+                
+                <label for="location">Location:</label>
+                <input type="text" name="location" id="location" value="{% if department %}{{ department.location }}{% endif %}">
+                
+                <button type="submit">{% if department %}Save Department{% else %}Add Department{% endif %}</button>
             </form>
         </div>
 
-
-        <h2>Existing Branches</h2>
+        <h2>Existing Departments</h2>
         <table>
             <thead>
                 <tr>
-                    <th>Branch Name</th>
-                    <th>Branch Code</th>
+                    <th>Department Name</th>
+                    <th>Manager</th>
+                    <th>Location</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for cat in branches %}
-                    <tr id="branch-{{ cat.id }}">
-                        <td>{{ cat.name }}</td>
-                        <td>{{ cat.code }}</td>
+                {% for dept in departments %}
+                    <tr id="department-{{ dept.id }}">
+                        <td>{{ dept.name }}</td>
+                        <td>{{ dept.manager }}</td>
+                        <td>{{ dept.location }}</td>
                         <td class="actions">
-                            <a href="{% url 'edit_branch' cat.id %}">Edit</a>
-                            <a href="#" onclick="deleteBranch('{{ cat.id }}', this); return false;">Delete</a>
+                            <a href="{% url 'edit_department' dept.id %}">Edit</a>
+                            <a href="#" onclick="deleteDepartment('{{ dept.id }}', this); return false;">Delete</a>
                         </td>
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="3" style="text-align: center;">No branches available.</td>
+                        <td colspan="4" style="text-align: center;">No departments available.</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-
-        <!-- Display soft-deleted branches -->
-        <div class="deleted-branches">
-            <h3>Deleted Branches</h3>
+        <!-- Display soft-deleted departments -->
+        <div class="deleted-departments">
+            <h3>Deleted Departments</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Branch Name</th>
-                        <th>Branch Code</th>
+                        <th>Department Name</th>
+                        <th>Manager</th>
+                        <th>Location</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for cat in deleted_branches %}
-                        <tr id="branch-{{ cat.id }}">
-                            <td>{{ cat.name }}</td>
-                            <td>{{ cat.code }}</td>
+                    {% for dept in deleted_departments %}
+                        <tr id="department-{{ dept.id }}">
+                            <td>{{ dept.name }}</td>
+                            <td>{{ dept.manager }}</td>
+                            <td>{{ dept.location }}</td>
                             <td class="actions">
-                                <a href="#" onclick="restoreBranch('{{ cat.id }}', this); return false;">Restore</a>
+                                <a href="#" onclick="restoreDepartment('{{ dept.id }}', this); return false;">Restore</a>
                             </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="3" style="text-align: center;">No deleted branches available.</td>
+                            <td colspan="4" style="text-align: center;">No deleted departments available.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -387,4 +382,3 @@
     </div>
 </body>
 </html>
-

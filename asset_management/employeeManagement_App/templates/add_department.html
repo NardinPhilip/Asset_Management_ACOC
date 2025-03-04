@@ -1,0 +1,45 @@
+{% extends 'index.html' %}
+{% block content %}
+  <h2>Add New Department</h2>
+  <form method="POST">
+    {% csrf_token %}
+    <label for="id_name">Name:</label>
+    {{ form.name }}
+
+    <label for="id_description">Description:</label>
+    {{ form.description }}
+
+    <label for="id_location">Location:</label>
+    {{ form.location }}
+
+    <button type="submit">Add Department</button>
+</form>
+
+
+  <hr>
+  <h3>Existing Departments</h3>
+  <table border="1" cellspacing="0" cellpadding="5">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Location</th>
+        <th>Total Employees</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dept in departments %}
+        <tr>
+          <td>{{ dept.name }}</td>
+          <td>{{ dept.description }}</td>
+          <td>{{ dept.location }}</td>
+          <td>{{ dept.employee_count }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4">No departments available.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

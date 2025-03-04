@@ -9,8 +9,11 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
 
+    # Launch Pad
+    path('launch_pad/', views.launch_pad, name= 'launch_pad'),
+
     # Main Pages
-    path('index/', views.index, name='index'),
+    path('asset_management/assets/templates/index.html', views.index, name='index'),
     path('branch_list/', views.branch_list, name='branch_list'),
     path('category_list/', views.category_list, name='category_list'),
 
@@ -39,6 +42,7 @@ urlpatterns = [
     path('start_audit/', views.start_audit, name='start_audit'),
     path('scan_qr_code/', views.scan_qr_code, name='scan_qr_code'),
     path('end_audit/', views.end_audit, name='end_audit'),
+
 ]
 
 # Serve media files during development

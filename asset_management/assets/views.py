@@ -19,6 +19,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from .models import Branch, Category, Asset, AuditSession
 from reportlab.pdfgen import canvas
+# from .models import Department, Employee, Branch
 
 # Login View
 def login_view(request):
@@ -26,13 +27,15 @@ def login_view(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
+        
         if user is not None:
             login(request, user)
-            next_url = request.GET.get('next', 'index')  # Redirect to 'index' or the next URL
-            return redirect(next_url)
+            next_url = request.GET.get('next') or request.POST.get('next') or 'launch_pad'  # Use 'next' from query or POST
+            return redirect(next_url)  # Use 'next' from query or POST
         else:
-            messages.error(request, 'Invalid username or password.')  # Use messages framework
-    return render(request, 'login.html')
+            messages.error(request, 'Invalid username or password.')  # Error message for invalid login
+    
+    return render(request, 'login.html', {'next': request.GET.get('next', '')})
 
 # Logout View
 def logout_view(request):
@@ -65,6 +68,10 @@ def register_view(request):
 
     return render(request, 'register.html')
 
+
+@login_required
+def launch_pad(request):
+    return render(request, 'launch_pad.html')
 
 @login_required
 def index(request):
@@ -656,3 +663,98 @@ def restore_category(request, category_id):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     else:
         return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=400)
+
+
+
+
+# Add Department View
+# @login_required
+# def add_department(request):
+#     if request.method == 'POST':
+#         name = request.POST.get('name')
+#         manager = request.POST.get('manager')
+#         branch_id = request.POST.get('branch')
+
+#         try:
+#             branch = Branch.objects.get(id=branch_id)
+#             Department.objects.create(
+#                 name=name,
+#                 manager=manager,
+#                 branch=branch,
+#                 is_deleted=False  # New departments are not soft-deleted by default
+#             )
+#             messages.success(request, 'Department added successfully!')
+#         except Branch.DoesNotExist:
+#             messages.error(request, 'Selected branch does not exist!')
+
+#         return redirect('add_department')  # Reload page after adding
+
+#     # Fetch all departments (both active and soft-deleted)
+#     departments = Department.objects.all()
+#     branches = Branch.objects.filter(is_deleted=False)
+
+#     return render(request, 'add_department.html', {
+#         'departments': departments,
+#         'branches': branches,
+#         'is_edit': False  # Flag to indicate adding mode
+#     })
+
+# # Edit Department View
+# @login_required
+# def edit_department(request, department_id):
+#     department = get_object_or_404(Department, id=department_id)
+#     branches = Branch.objects.filter(is_deleted=False)
+
+#     if request.method == 'POST':
+#         name = request.POST.get('name')
+#         manager = request.POST.get('manager')
+#         branch_id = request.POST.get('branch')
+
+#         try:
+#             branch = Branch.objects.get(id=branch_id)
+#             department.name = name
+#             department.manager = manager
+#             department.branch = branch
+#             department.save()
+#             messages.success(request, 'Department updated successfully!')
+#         except Branch.DoesNotExist:
+#             messages.error(request, 'Selected branch does not exist!')
+
+#         return redirect('add_department')  # Redirect back to the add department page after edit
+
+#     return render(request, 'add_department.html', {
+#         'department': department,
+#         'departments': Department.objects.all(),
+#         'branches': branches,
+#         'is_edit': True  # Flag to indicate editing mode
+#     })
+
+# # Delete Department (Soft Delete)
+# @login_required
+# def delete_department(request, department_id):
+#     if request.method == 'POST':
+#         department = get_object_or_404(Department, id=department_id)
+#         department.is_deleted = True  # Soft delete the department
+#         department.save()
+#         messages.success(request, 'Department marked as deleted.')
+#         return JsonResponse({'success': True})
+#     return JsonResponse({'success': False})
+
+# # Restore Department (Restore from Soft Delete)
+# @login_required
+# def restore_department(request, department_id):
+#     if request.method == 'POST':
+#         department = get_object_or_404(Department, id=department_id)
+#         department.is_deleted = False  # Restore the department
+#         department.save()
+#         messages.success(request, 'Department restored successfully.')
+#         return JsonResponse({'success': True})
+#     return JsonResponse({'success': False})
+
+# # List Departments (Active and Soft Deleted)
+# @login_required
+# def department_list(request):
+#     departments = Department.objects.all()  # Fetch all departments
+#     return render(request, 'add_department.html', {
+#         'departments': departments
+#     })

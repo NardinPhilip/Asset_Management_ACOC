@@ -100,3 +100,29 @@ class AuditSession(models.Model):
 
     def __str__(self):
         return f"Audit Session {self.id} - {self.start_time}"
+
+from django.db import models
+
+# class Department(models.Model):
+#     name = models.CharField(max_length=200)
+#     manager = models.CharField(max_length=200)
+#     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)
+#     is_deleted = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return self.name
+
+#     @property
+#     def employee_count(self):
+#         return self.employee_set.count()
+
+# class Employee(models.Model):
+#     name = models.CharField(max_length=200)
+#     department = models.ForeignKey(Department, on_delete=models.CASCADE)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return self.name

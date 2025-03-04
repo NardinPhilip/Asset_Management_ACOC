@@ -1,0 +1,185 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Employee Management System{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        /* Button Styling */
+        .nav-button {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .nav-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        tr {
+            cursor: pointer;
+        }
+
+        /* Hidden Row Styling */
+        .details-row {
+            display: none;
+            background-color: #f9f9f9;
+        }
+
+        .details-content {
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* Dashboard Button */
+        .dashboard-button {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .dashboard-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Employee Management System</h1>
+    <nav>
+      <button class="nav-button" onclick="location.href='{% url "add_employee" %}'">Add Employee</button>
+      <button class="nav-button" onclick="location.href='add_department'">Add Department</button>
+    </nav>
+</header>
+
+{% block content %}
+  <h2>Employee List</h2>
+  <form method="GET" action="">
+    <div>
+      <label for="department">Filter by Department:</label>
+      <select name="department" id="department">
+        <option value="">All Departments</option>
+        {% for dept in department %}
+          <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+            {{ dept.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="asset">Filter by Asset:</label>
+      <select name="asset" id="asset">
+        <option value="">All Assets</option>
+        {% for asset in assets %}
+          <option value="{{ asset.id }}" {% if request.GET.asset == asset.id|stringformat:"s" %}selected{% endif %}>
+            {{ asset.description }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="search">Search by Employee Name:</label>
+      <input type="text" name="search" id="search" placeholder="Enter name" value="{{ request.GET.search }}">
+    </div>
+    <button type="submit">Apply Filters</button>
+  </form>
+
+  <br>
+
+  <table>
+    <thead>
+      <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Department</th>
+        <th>Assigned Assets</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for employee in employee %}
+        <tr class="employee-row" data-employee-id="{{ employee.id }}">
+          <td>{{ employee.first_name }}</td>
+          <td>{{ employee.last_name }}</td>
+          <td>{{ employee.department.name }}</td>
+          <td>
+            {% if employee.assigned_assets.all %}
+              {% for assignment in employee.assigned_assets.all %}
+                {{ assignment.asset.description }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            {% else %}
+              None
+            {% endif %}
+          </td>
+        </tr>
+        <tr class="details-row" id="details-{{ employee.id }}">
+          <td colspan="4">
+            <div class="details-content">
+              <h3>Asset Details for {{ employee.first_name }} {{ employee.last_name }}</h3>
+              {% if employee.assigned_assets.all %}
+                <ul>
+                  {% for assignment in employee.assigned_assets.all %}
+                    <li><strong>{{ assignment.asset.description }}</strong> - Assigned on {{ assignment.assigned_date }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p>No assets assigned.</p>
+              {% endif %}
+              <a href="dashboard.html" class="dashboard-button">Go to Dashboard</a>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4">No employees found.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <script>
+    // JavaScript to Toggle Asset Details on Row Click
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".employee-row").forEach(row => {
+            row.addEventListener("click", function () {
+                const employeeId = this.dataset.employeeId;
+                const detailsRow = document.getElementById("details-" + employeeId);
+                
+                if (detailsRow.style.display === "table-row") {
+                    detailsRow.style.display = "none";
+                } else {
+                    document.querySelectorAll(".details-row").forEach(row => row.style.display = "none");
+                    detailsRow.style.display = "table-row";
+                }
+            });
+        });
+    });
+  </script>
+
+{% endblock %}
+</body>
+</html>

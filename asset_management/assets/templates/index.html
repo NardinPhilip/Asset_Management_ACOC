@@ -265,12 +265,12 @@
     <!-- Search and Filters -->
     <div class="search-filters">
         <form method="GET" action="">
-            <input type="text" name="search" placeholder="Search by Serial Number or Description" value="{{ search_query }}">
+            <input type="text" name="search" placeholder="Search by Serial Number or Description" value="{{ request.GET.search }}">
             
             <select name="branch_filter">
                 <option value="">All Branches</option>
                 {% for branch in branches %}
-                    <option value="{{ branch.id }}" {% if branch.id == branch_filter %}selected{% endif %}>
+                    <option value="{{ branch.id }}" {% if request.GET.branch_filter == branch.id|stringformat:"s" %}selected{% endif %}>
                         {{ branch.name }}
                     </option>
                 {% endfor %}
@@ -279,7 +279,7 @@
             <select name="category_filter">
                 <option value="">All Categories</option>
                 {% for category in categories %}
-                    <option value="{{ category.id }}" {% if category.id == category_filter %}selected{% endif %}>
+                    <option value="{{ category.id }}" {% if request.GET.category_filter == category.id|stringformat:"s" %}selected{% endif %}>
                         {{ category.name }}
                     </option>
                 {% endfor %}

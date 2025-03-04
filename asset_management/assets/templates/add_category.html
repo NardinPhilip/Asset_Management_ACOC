@@ -222,6 +222,13 @@
                             <a href="#" onclick="restoreCategory('${categoryId}', this); return false;">Restore</a>
                         `;
                         deletedTableBody.appendChild(row);
+
+                        // Remove the "No deleted categories available" message if it exists
+                        const noDeletedMessage = deletedTableBody.querySelector('tr td[colspan="3"]');
+                        if (noDeletedMessage) {
+                            noDeletedMessage.remove();
+                        }
+
                         alert('Category deleted successfully!');
                     } else {
                         alert('Failed to delete category.');
@@ -257,6 +264,17 @@
                             <a href="#" onclick="deleteCategory('${categoryId}', this); return false;">Delete</a>
                         `;
                         activeTableBody.appendChild(row);
+
+                        // Add the "No deleted categories available" message if the deleted table is empty
+                        const deletedTableBody = document.querySelector('.deleted-categories tbody');
+                        if (deletedTableBody.children.length === 0) {
+                            deletedTableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="3" style="text-align: center;">No deleted categories available.</td>
+                                </tr>
+                            `;
+                        }
+
                         alert('Category restored successfully!');
                     } else {
                         alert(data.error || 'Failed to restore category.');
